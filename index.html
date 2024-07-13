@@ -86,9 +86,6 @@
             margin-top: 10px;
             padding-left: 20px;
         }
-        .louvor-toggle {
-            cursor: pointer;
-        }
         .btn-adicionar {
             position: fixed;
             bottom: 20px;
@@ -132,6 +129,24 @@
         .btn-danger {
             background-color: #e74c3c;
             border: none;
+        }
+        .btn-toggle-louvor {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            margin-left: 5px;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+        .btn-toggle-louvor:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
@@ -250,8 +265,9 @@
                             <div class="event-info">
                                 <div class="event-title">${eventData.evento}</div>
                                 <div class="event-time"><strong>HORÁRIO: </strong>${formattedTime}</div>
-                                <div class="event-louvor"><strong>LOUVOR: </strong>
-                                    <span class="louvor-toggle" onclick="toggleLouvor(this)">+</span>
+                                <div class="event-louvor">
+                                    <strong>LOUVOR: </strong>
+                                    <button class="btn-toggle-louvor" onclick="toggleLouvor(event, this)">+</button>
                                 </div>
                                 <ul class="louvor-list" style="display: none;">
                                     ${eventData.LOUVOR.map(item => `<li>${item}</li>`).join('')}
@@ -269,14 +285,15 @@
         }
 
         // Função para alternar a visibilidade da lista de louvor
-        function toggleLouvor(element) {
-            const louvorList = element.parentElement.nextElementSibling;
+        function toggleLouvor(event, button) {
+            event.stopPropagation();
+            const louvorList = button.parentElement.nextElementSibling;
             if (louvorList.style.display === 'none') {
                 louvorList.style.display = 'block';
-                element.textContent = '-';
+                button.textContent = '-';
             } else {
                 louvorList.style.display = 'none';
-                element.textContent = '+';
+                button.textContent = '+';
             }
         }
 
