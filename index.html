@@ -82,6 +82,10 @@
             font-size: 14px;
             margin-bottom: 5px;
         }
+        .event-date .weekday {
+            font-size: 14px;
+            text-transform: capitalize;
+        }
         .louvor-list {
             margin-top: 10px;
             padding-left: 20px;
@@ -148,6 +152,11 @@
         .btn-toggle-louvor:hover {
             background-color: #2980b9;
         }
+        .flatpickr-input {
+            background-color: #3c3c3c !important;
+            border: none !important;
+            color: #ffffff !important;
+        }
     </style>
 </head>
 <body>
@@ -176,7 +185,7 @@
                         <input type="hidden" id="editEventId">
                         <div class="form-group">
                             <label for="editEvento">Nome do Evento</label>
-                            <input type="text" class="form-control" id="editEvento" required>
+                            <input type="text" class="form-control" id="editEvento" oninput="this.value = this.value.toUpperCase()" required>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
@@ -190,13 +199,14 @@
                         </div>
                         <div class="form-group">
                             <label for="editLouvor">Louvor (separado por vírgulas)</label>
-                            <input type="text" class="form-control" id="editLouvor">
+                            <input type="text" class="form-control" id="editLouvor" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div class="form-group">
                             <label for="editPregador">Pregador</label>
-                            <input type="text" class="form-control" id="editPregador">
+                            <input type="text" class="form-control" id="editPregador" oninput="this.value = this.value.toUpperCase()">
                         </div>
                     </form>
+                    
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
@@ -260,7 +270,8 @@
                         eventCard.innerHTML = `
                             <div class="event-date">
                                 <span class="day">${formattedDate[0]}</span>
-                                <span class="month">${formattedDate[1]}</span>
+                                <span class="month">${formattedDate[1].charAt(0).toUpperCase() + formattedDate[1].slice(1)}</span>
+       <span class="weekday">${eventDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</span>
                             </div>
                             <div class="event-info">
                                 <div class="event-title">${eventData.evento}</div>
@@ -361,6 +372,7 @@
             locale: "pt",
             minDate: "today",
             maxDate: new Date().fp_incr(365)
+            
         });
 
         // Carregar eventos quando a página for carregada
