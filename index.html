@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda de Eventos</title>
+    <link rel="shortcut icon" href="./3.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 0px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #2c2c2c;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        .header {
+            background-color: #2c2c2c;
+            padding: 20px 0;
+            text-align: center;
+            position: relative;
+            z-index: 1000;
+        }
+        .header img {
+            max-width: 180px;
+        }
+        .divider {
+            width: 75%;
+            height: 2px;
+            background-color: #3498db;
+            margin: 30px auto;
+        }
+        .event-card {
+            display: flex;
+            background-color: #3c3c3c;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .event-date {
+            background-color: #3498db;
+            color: #ffffff;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-width: 100px;
+        }
+        .event-date .day {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .event-date .month {
+            font-size: 24px;
+        }
+        .event-info {
+            padding: 15px;
+            flex-grow: 1;
+        }
+        .event-title {
+            font-weight: bold;
+            color: #3498db;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .event-time, .event-louvor, .event-pregador {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .louvor-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .louvor-toggle {
+            cursor: pointer;
+        }
+        .btn-adicionar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 30px;
+            line-height: 60px;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: background-color 0.3s;
+        }
+        .btn-adicionar:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+            color: white;
+        }
+        .modal-content {
+            background-color: #2c2c2c;
+            color: #ffffff;
+        }
+        .modal-header {
+            border-bottom: 1px solid #3498db;
+        }
+        .modal-footer {
+            border-top: 1px solid #3498db;
+        }
+        .form-control {
+            background-color: #3c3c3c;
+            border: none;
+            color: #ffffff;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border: none;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="cadagenda.html" class="btn-adicionar">+</a>
+    <div class="header">
+        <img src="/LogoBranco.png" alt="Logo da Igreja Evangélica Batista Itapevi">
+    </div>
+    <div class="container">
+        <h2 class="text-center mb-4 font-weight-bold">Agenda de Eventos</h2>
+        <div class="divider"></div>
+        <div id="eventList"></div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Evento</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editEventId">
+                        <div class="form-group">
+                            <label for="editEvento">Nome do Evento</label>
+                            <input type="text" class="form-control" id="editEvento" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="editData">Data</label>
+                                <input type="text" class="form-control" id="editData" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="editHora">Hora</label>
+                                <input type="time" class="form-control" id="editHora" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLouvor">Louvor (separado por vírgulas)</label>
+                            <input type="text" class="form-control" id="editLouvor">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPregador">Pregador</label>
+                            <input type="text" class="form-control" id="editPregador">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteEvent()">Excluir</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedEvent()">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Importar Firebase e Bootstrap JS -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-firestore.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Configuração do Firebase
+        var configuracaoFirebase = {
+            apiKey: "AIzaSyCEqseDS-_OSmdfGf-NNflAJnS_AT5i1-U",
+            authDomain: "dbiebi.firebaseapp.com",
+            databaseURL: "https://dbiebi-default-rtdb.firebaseio.com",
+            projectId: "dbiebi",
+            storageBucket: "dbiebi.appspot.com",
+            messagingSenderId: "1068164821081",
+            appId: "1:1068164821081:web:2d3e0030d5311d94f30148"
+        };
+        firebase.initializeApp(configuracaoFirebase);
+        var bancoDeDados = firebase.firestore();
+
+        // Função para formatar a data
+        function formatDate(date) {
+            const options = { day: '2-digit', month: 'long' };
+            return date.toLocaleDateString('pt-BR', options).split(' de ');
+        }
+
+        // Função para formatar a hora
+        function formatTime(date) {
+            const options = { hour: '2-digit', minute: '2-digit' };
+            return date.toLocaleTimeString('pt-BR', options);
+        }
+
+        // Função para carregar e exibir os eventos
+        function loadEvents() {
+            const eventList = document.getElementById('eventList');
+            eventList.innerHTML = '';
+
+            bancoDeDados.collection('agenda')
+                .orderBy('Data', 'asc')
+                .get()
+                .then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        const eventData = doc.data();
+                        const eventDate = eventData.Data.toDate();
+                        const formattedDate = formatDate(eventDate);
+                        const formattedTime = formatTime(eventDate);
+
+                        const eventCard = document.createElement('div');
+                        eventCard.className = 'event-card';
+                        eventCard.innerHTML = `
+                            <div class="event-date">
+                                <span class="day">${formattedDate[0]}</span>
+                                <span class="month">${formattedDate[1]}</span>
+                            </div>
+                            <div class="event-info">
+                                <div class="event-title">${eventData.evento}</div>
+                                <div class="event-time"><strong>HORÁRIO: </strong>${formattedTime}</div>
+                                <div class="event-louvor"><strong>LOUVOR: </strong>
+                                    <span class="louvor-toggle" onclick="toggleLouvor(this)">+</span>
+                                </div>
+                                <ul class="louvor-list" style="display: none;">
+                                    ${eventData.LOUVOR.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                                <div class="event-pregador"><strong>PREGADOR:</strong> ${eventData.pregador || 'Não informado'}</div>
+                            </div>
+                        `;
+                        eventCard.addEventListener('click', () => openEditModal(doc.id, eventData));
+                        eventList.appendChild(eventCard);
+                    });
+                })
+                .catch((error) => {
+                    console.error("Erro ao carregar eventos: ", error);
+                });
+        }
+
+        // Função para alternar a visibilidade da lista de louvor
+        function toggleLouvor(element) {
+            const louvorList = element.parentElement.nextElementSibling;
+            if (louvorList.style.display === 'none') {
+                louvorList.style.display = 'block';
+                element.textContent = '-';
+            } else {
+                louvorList.style.display = 'none';
+                element.textContent = '+';
+            }
+        }
+
+        // Função para abrir o modal de edição
+        function openEditModal(eventId, eventData) {
+            document.getElementById('editEventId').value = eventId;
+            document.getElementById('editEvento').value = eventData.evento;
+            document.getElementById('editData').value = eventData.Data.toDate().toLocaleDateString('pt-BR');
+            document.getElementById('editHora').value = eventData.Data.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('editLouvor').value = eventData.LOUVOR.join(', ');
+            document.getElementById('editPregador').value = eventData.pregador || '';
+
+            $('#editModal').modal('show');
+        }
+
+        // Função para salvar o evento editado
+        function saveEditedEvent() {
+            const eventId = document.getElementById('editEventId').value;
+            const evento = document.getElementById('editEvento').value.trim().toUpperCase();
+            const data = document.getElementById('editData').value;
+            const hora = document.getElementById('editHora').value;
+            const louvor = document.getElementById('editLouvor').value.split(',').map(item => item.trim().toUpperCase());
+            const pregador = document.getElementById('editPregador').value.trim().toUpperCase();
+
+            const [dia, mes, ano] = data.split('/');
+            const dataHora = new Date(ano, mes - 1, dia, ...hora.split(':'));
+
+            bancoDeDados.collection('agenda').doc(eventId).update({
+                evento: evento,
+                Data: firebase.firestore.Timestamp.fromDate(dataHora),
+                LOUVOR: louvor,
+                pregador: pregador
+            })
+            .then(() => {
+                alert('Evento atualizado com sucesso!');
+                $('#editModal').modal('hide');
+                loadEvents();
+            })
+            .catch((error) => {
+                console.error("Erro ao atualizar evento: ", error);
+                alert('Ocorreu um erro ao atualizar o evento. Por favor, tente novamente.');
+            });
+        }
+
+        // Função para excluir o evento
+        function deleteEvent() {
+            const eventId = document.getElementById('editEventId').value;
+            if (confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.')) {
+                bancoDeDados.collection('agenda').doc(eventId).delete()
+                .then(() => {
+                    alert('Evento excluído com sucesso!');
+                    $('#editModal').modal('hide');
+                    loadEvents();
+                })
+                .catch((error) => {
+                    console.error("Erro ao excluir evento: ", error);
+                    alert('Ocorreu um erro ao excluir o evento. Por favor, tente novamente.');
+                });
+            }
+        }
+
+        // Inicializar Flatpickr para o campo de data de edição
+        flatpickr("#editData", {
+            dateFormat: "d/m/Y",
+            locale: "pt",
+            minDate: "today",
+            maxDate: new Date().fp_incr(365)
+        });
+
+        // Carregar eventos quando a página for carregada
+        window.onload = function() {
+            loadEvents();
+            // Inicializar tooltips do Bootstrap, se necessário
+            $('[data-toggle="tooltip"]').tooltip();
+        };
+    </script>
+</body>
+</html>
