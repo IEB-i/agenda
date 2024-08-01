@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela de Eventos</title>
+    <link rel="shortcut icon" href="image/3.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 0px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: #2c2c2c;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        .header {
+            background-color: #2c2c2c;
+            padding: 20px 0;
+            text-align: center;
+            position: relative;
+            z-index: 1000;
+        }
+        .header img {
+            max-width: 180px;
+        }
+        .divider {
+            width: 75%;
+            height: 2px;
+            background-color: #3498db;
+            margin: 30px auto;
+        }
+        .table {
+            color: #ffffff;
+        }
+        .table thead th {
+            background-color: #3498db;
+            border-color: #2980b9;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border: none;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border: none;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="image/LogoBranco.png" alt="Logo da Igreja Evangélica Batista Itapevi">
+    </div>
+    <div class="container">
+        <h2 class="text-center mb-4 font-weight-bold">Tabela de Eventos</h2>
+        <div class="divider"></div>
+        <div class="mb-3">
+            <button class="btn btn-success" onclick="downloadExcel()">Download Excel</button>
+            <button class="btn btn-danger" onclick="deleteAllData()">Excluir Todos os Dados</button>
+            <input type="file" id="txtFileInput" accept=".txt" style="display: none;">
+            <button class="btn btn-primary" onclick="document.getElementById('txtFileInput').click()">Upload TXT</button>
+        </div>
+        <div id="documentCount" class="mb-3"></div>
+        <div id="uploadStatus" class="mb-3"></div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Evento</th>
+                    <th>Data</th>
+                    <th>Hora</th>
+                    <th>Louvor</th>
+                    <th>Pregador</th>
+                    <th>Acolhimento</th>
+                    <th>Ceia</th>
+                    <th>Dirigentes</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Dados serão inseridos aqui dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script>
+        // Configuração do Firebase
+        var configuracaoFirebase = {
+            apiKey: "AIzaSyCEqseDS-_OSmdfGf-NNflAJnS_AT5i1-U",
+            authDomain: "dbiebi.firebaseapp.com",
+            databaseURL: "https://dbiebi-default-rtdb.firebaseio.com",
+            projectId: "dbiebi",
+            storageBucket: "dbiebi.appspot.com",
+            messagingSenderId: "1068164821081",
+            appId: "1:1068164821081:web:2d3e0030d5311d94f30148"
+        };
+        firebase.initializeApp(configuracaoFirebase);
+        var bancoDeDados = firebase.firestore();
+
+        function loadData() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            bancoDeDados.collection('agenda')
+                .orderBy('Data', 'asc')
+                .get()
+                .then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const row = tableBody.insertRow();
+                        row.insertCell(0).textContent = data.evento;
+                        row.insertCell(1).textContent = data.Data;
+                        row.insertCell(2).textContent = data.Hora;
+                        row.insertCell(3).textContent = data.LOUVOR.join(', ');
+                        row.insertCell(4).textContent = data.pregador || 'Não informado';
+                        row.insertCell(5).textContent = data.acolhimento ? data.acolhimento.join(', ') : 'Não informado';
+                        row.insertCell(6).textContent = data.ceia ? data.ceia.join(', ') : 'Não informado';
+                        row.insertCell(7).textContent = data.dirigentes ? data.dirigentes.join(', ') : 'Não informado';
+                    });
+                    updateDocumentCount(querySnapshot.size);
+                })
+                .catch((error) => {
+                    console.error("Erro ao carregar dados: ", error);
+                });
+        }
+
+        function updateDocumentCount(count) {
+            document.getElementById('documentCount').textContent = `Total de eventos: ${count}`;
+        }
+
+        function downloadExcel() {
+            const wb = XLSX.utils.table_to_book(document.querySelector('table'), {sheet: "Dados"});
+            XLSX.writeFile(wb, 'dados_tabela.xlsx');
+        }
+
+        function deleteAllData() {
+            if (confirm('Tem certeza que deseja excluir todos os eventos? Esta ação não pode ser desfeita.')) {
+                const batch = bancoDeDados.batch();
+                bancoDeDados.collection('agenda').get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        batch.delete(doc.ref);
+                    });
+                    return batch.commit();
+                }).then(() => {
+                    alert('Todos os eventos foram excluídos.');
+                    loadData();
+                }).catch((error) => {
+                    console.error("Erro ao excluir eventos: ", error);
+                });
+            }
+        }
+
+        document.getElementById('txtFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const txtData = e.target.result;
+                const data = txtToArray(txtData);
+                uploadData(data);
+            };
+            reader.readAsText(file);
+        });
+
+        function txtToArray(str, delimiter = ";") {
+            const rows = str.split("\n").filter(row => row.trim() !== '');
+            const headers = rows[0].split(delimiter).map(header => header.trim());
+            return rows.slice(1).map(function(row) {
+                const values = row.split(delimiter);
+                return headers.reduce(function(object, header, index) {
+                    object[header] = values[index] ? values[index].trim() : '';
+                    return object;
+                }, {});
+            });
+        }
+
+        function uploadData(data) {
+            const uploadStatus = document.getElementById('uploadStatus');
+            uploadStatus.textContent = 'Iniciando upload...';
+            let successCount = 0;
+            let errorCount = 0;
+
+            const uploadPromises = data.map((item, index) => {
+                console.log(`Processando item ${index + 1}:`, item);
+                
+                try {
+                    let dataString = '';
+                    if (item.Data) {
+                        const dataExcel = parseInt(item.Data);
+                        const data = new Date((dataExcel - 25569) * 86400 * 1000);
+                        data.setDate(data.getDate() + 1);
+                        dataString = data.toLocaleDateString('pt-BR');
+                    }
+
+                    let horaString = '';
+                    if (item.Hora) {
+                        const horaDecimal = parseFloat(item.Hora.replace(',', '.'));
+                        const horas = Math.floor(horaDecimal * 24);
+                        const minutos = Math.round((horaDecimal * 24 - horas) * 60);
+                        horaString = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+                    }
+
+                    return bancoDeDados.collection('agenda').add({
+                        evento: item.Evento,
+                        Data: dataString,
+                        Hora: horaString,
+                        LOUVOR: item.Louvor ? item.Louvor.split(',').map(l => l.trim()) : [],
+                        pregador: item.Pregador,
+                        acolhimento: item.Acolhimento ? item.Acolhimento.split(',').map(a => a.trim()) : [],
+                        ceia: item.Ceia ? item.Ceia.split(',').map(c => c.trim()) : [],
+                        dirigentes: item.Dirigentes ? item.Dirigentes.split(',').map(d => d.trim()) : []
+                    })
+                    .then(() => { 
+                        console.log(`Item ${index + 1} adicionado com sucesso`);
+                        successCount++; 
+                    })
+                    .catch((error) => { 
+                        console.error(`Erro ao adicionar item ${index + 1}:`, error);
+                        errorCount++;
+                    });
+                } catch (error) {
+                    console.error(`Erro ao processar item ${index + 1}:`, error);
+                    errorCount++;
+                    return Promise.resolve();
+                }
+            });
+
+            Promise.all(uploadPromises).then(() => {
+                uploadStatus.textContent = `Upload concluído. ${successCount} eventos adicionados com sucesso. ${errorCount} erros.`;
+                console.log('Todos os uploads concluídos');
+                loadData();
+            }).catch((error) => {
+                console.error('Erro durante o upload:', error);
+                uploadStatus.textContent = 'Erro durante o upload. Verifique o console para mais detalhes.';
+            });
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

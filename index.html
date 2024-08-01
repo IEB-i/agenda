@@ -78,7 +78,7 @@
             font-size: 18px;
             margin-bottom: 5px;
         }
-        .event-time, .event-louvor, .event-pregador {
+        .event-time, .event-louvor, .event-pregador, .event-acolhimento, .event-ceia, .event-dirigentes {
             font-size: 14px;
             margin-bottom: 5px;
         }
@@ -86,7 +86,7 @@
             font-size: 14px;
             text-transform: capitalize;
         }
-        .louvor-list {
+        .louvor-list, .acolhimento-list, .ceia-list, .dirigentes-list {
             margin-top: 10px;
             padding-left: 20px;
         }
@@ -134,7 +134,7 @@
             background-color: #e74c3c;
             border: none;
         }
-        .btn-toggle-louvor {
+        .btn-toggle-louvor, .btn-toggle-acolhimento, .btn-toggle-ceia, .btn-toggle-dirigentes {
             background-color: #3498db;
             color: white;
             border: none;
@@ -149,8 +149,13 @@
             position: relative;
             z-index: 2;
         }
-        .btn-toggle-louvor:hover {
+        .btn-toggle-louvor:hover, .btn-toggle-acolhimento:hover, .btn-toggle-ceia:hover, .btn-toggle-dirigentes:hover {
             background-color: #2980b9;
+        }
+        .flatpickr-input {
+            background-color: #3c3c3c !important;
+            border: none !important;
+            color: #ffffff !important;
         }
         .flatpickr-input {
             background-color: #3c3c3c !important;
@@ -186,6 +191,7 @@
                         <div class="form-group">
                             <label for="editEvento">Nome do Evento</label>
                             <input type="text" class="form-control" id="editEvento" oninput="this.value = this.value.toUpperCase()" required>
+                            <input type="text" class="form-control" id="editEvento" oninput="this.value = this.value.toUpperCase()" required>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
@@ -202,7 +208,20 @@
                             <input type="text" class="form-control" id="editLouvor" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div class="form-group">
+                            <label for="editAcolhimento">Acolhimento (separado por vírgulas)</label>
+                            <input type="text" class="form-control" id="editAcolhimento" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+                        <div class="form-group">
+                            <label for="editCeia">Ceia (separado por vírgulas)</label>
+                            <input type="text" class="form-control" id="editCeia" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDirigentes">Dirigentes (separado por vírgulas)</label>
+                            <input type="text" class="form-control" id="editDirigentes" oninput="this.value = this.value.toUpperCase()">
+                        </div>
+                        <div class="form-group">
                             <label for="editPregador">Pregador</label>
+                            <input type="text" class="form-control" id="editPregador" oninput="this.value = this.value.toUpperCase()">
                             <input type="text" class="form-control" id="editPregador" oninput="this.value = this.value.toUpperCase()">
                         </div>
                     </form>
@@ -250,38 +269,88 @@
             return date.toLocaleTimeString('pt-BR', options);
         }
 
+        function getColorForWeek(date) {
+            const weekNumber = getWeekNumber(date);
+            const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
+            return colors[weekNumber % colors.length];
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+
         // Função para carregar e exibir os eventos
         function loadEvents() {
             const eventList = document.getElementById('eventList');
             eventList.innerHTML = '';
 
+            const hoje = new Date();
+            const hojeFormatado = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
+
             bancoDeDados.collection('agenda')
+                .where('Data', '>=', hojeFormatado)
                 .orderBy('Data', 'asc')
                 .get()
                 .then((querySnapshot) => {
                     querySnapshot.forEach((doc) => {
                         const eventData = doc.data();
-                        const eventDate = eventData.Data.toDate();
+                        const [dia, mes, ano] = eventData.Data.split('/');
+                        const eventDate = new Date(ano, mes - 1, dia);
                         const formattedDate = formatDate(eventDate);
-                        const formattedTime = formatTime(eventDate);
+
+                        eventData.acolhimento.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                        eventData.ceia.sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
                         const eventCard = document.createElement('div');
                         eventCard.className = 'event-card';
+
+                        const eventColor = getColorForWeek(eventDate);
+                        eventCard.style.borderLeft = `5px solid ${eventColor}`;
+                        eventCard.style.borderTop = `5px solid ${eventColor}`;
+
                         eventCard.innerHTML = `
-                            <div class="event-date">
+                            <div class="event-date" style="background-color: ${eventColor}">
                                 <span class="day">${formattedDate[0]}</span>
                                 <span class="month">${formattedDate[1].charAt(0).toUpperCase() + formattedDate[1].slice(1)}</span>
-       <span class="weekday">${eventDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</span>
+                                <span class="weekday">${eventDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</span>
                             </div>
                             <div class="event-info">
-                                <div class="event-title">${eventData.evento}</div>
-                                <div class="event-time"><strong>HORÁRIO: </strong>${formattedTime}</div>
+                                <div class="event-title" style="color: ${eventColor}">${eventData.evento}</div>
+                                <div class="event-time"><strong>HORÁRIO: </strong>${eventData.Hora}</div>
                                 <div class="event-louvor">
                                     <strong>LOUVOR: </strong>
                                     <button class="btn-toggle-louvor" onclick="toggleLouvor(event, this)">+</button>
                                 </div>
                                 <ul class="louvor-list" style="display: none;">
                                     ${eventData.LOUVOR.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                                <div class="event-acolhimento">
+                                    <strong>ACOLHIMENTO: </strong>
+                                    <button class="btn-toggle-acolhimento" onclick="toggleAcolhimento(event, this)">+</button>
+                                </div>
+                                <ul class="acolhimento-list" style="display: none;">
+                                    ${eventData.acolhimento.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                                ${eventData.ceia && eventData.ceia.length > 0 ? `
+                                <div class="event-ceia">
+                                    <strong>CEIA: </strong>
+                                    <button class="btn-toggle-ceia" onclick="toggleCeia(event, this)">+</button>
+                                </div>
+                                <ul class="ceia-list" style="display: none;">
+                                    ${eventData.ceia.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+
+                                <div class="event-dirigentes">
+                                    <strong>DIRIGENTES: </strong>
+                                    <button class="btn-toggle-dirigentes" onclick="toggleDirigentes(event, this)">+</button>
+                                </div>
+                                <ul class="dirigentes-list" style="display: none;">
+                                    ${eventData.dirigentes.map(item => `<li>${item}</li>`).join('')}
                                 </ul>
                                 <div class="event-pregador"><strong>PREGADOR:</strong> ${eventData.pregador || 'Não informado'}</div>
                             </div>
@@ -295,47 +364,68 @@
                 });
         }
 
-        // Função para alternar a visibilidade da lista de louvor
+
         function toggleLouvor(event, button) {
+            toggleList(event, button, 'louvor-list');
+        }
+
+        function toggleAcolhimento(event, button) {
+            toggleList(event, button, 'acolhimento-list');
+        }
+
+        function toggleCeia(event, button) {
+            toggleList(event, button, 'ceia-list');
+        }
+
+        function toggleDirigentes(event, button) {
+            toggleList(event, button, 'dirigentes-list');
+        }
+
+        function toggleList(event, button, listClass) {
             event.stopPropagation();
-            const louvorList = button.parentElement.nextElementSibling;
-            if (louvorList.style.display === 'none') {
-                louvorList.style.display = 'block';
+            const list = button.parentElement.nextElementSibling;
+            if (list.style.display === 'none') {
+                list.style.display = 'block';
                 button.textContent = '-';
             } else {
-                louvorList.style.display = 'none';
+                list.style.display = 'none';
                 button.textContent = '+';
             }
         }
 
-        // Função para abrir o modal de edição
         function openEditModal(eventId, eventData) {
             document.getElementById('editEventId').value = eventId;
             document.getElementById('editEvento').value = eventData.evento;
-            document.getElementById('editData').value = eventData.Data.toDate().toLocaleDateString('pt-BR');
-            document.getElementById('editHora').value = eventData.Data.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('editData').value = eventData.Data;
+            document.getElementById('editHora').value = eventData.Hora;
             document.getElementById('editLouvor').value = eventData.LOUVOR.join(', ');
+            document.getElementById('editAcolhimento').value = eventData.acolhimento.join(', ');
+            document.getElementById('editCeia').value = eventData.ceia.join(', ');
+            document.getElementById('editDirigentes').value = eventData.dirigentes.join(', ');
             document.getElementById('editPregador').value = eventData.pregador || '';
 
             $('#editModal').modal('show');
         }
 
-        // Função para salvar o evento editado
         function saveEditedEvent() {
             const eventId = document.getElementById('editEventId').value;
             const evento = document.getElementById('editEvento').value.trim().toUpperCase();
             const data = document.getElementById('editData').value;
             const hora = document.getElementById('editHora').value;
             const louvor = document.getElementById('editLouvor').value.split(',').map(item => item.trim().toUpperCase());
+            const acolhimento = document.getElementById('editAcolhimento').value.split(',').map(item => item.trim().toUpperCase());
+            const ceia = document.getElementById('editCeia').value.split(',').map(item => item.trim().toUpperCase());
+            const dirigentes = document.getElementById('editDirigentes').value.split(',').map(item => item.trim().toUpperCase());
             const pregador = document.getElementById('editPregador').value.trim().toUpperCase();
-
-            const [dia, mes, ano] = data.split('/');
-            const dataHora = new Date(ano, mes - 1, dia, ...hora.split(':'));
 
             bancoDeDados.collection('agenda').doc(eventId).update({
                 evento: evento,
-                Data: firebase.firestore.Timestamp.fromDate(dataHora),
+                Data: data,
+                Hora: hora,
                 LOUVOR: louvor,
+                acolhimento: acolhimento,
+                ceia: ceia,
+                dirigentes: dirigentes,
                 pregador: pregador
             })
             .then(() => {
@@ -349,7 +439,6 @@
             });
         }
 
-        // Função para excluir o evento
         function deleteEvent() {
             const eventId = document.getElementById('editEventId').value;
             if (confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.')) {
@@ -384,3 +473,4 @@
     </script>
 </body>
 </html>
+
