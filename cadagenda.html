@@ -129,6 +129,18 @@
                 <input type="text" class="form-control" id="louvor" oninput="this.value = this.value.toUpperCase()">
             </div>
             <div class="form-group">
+                <label for="acolhimento">Acolhimento (separado por vírgulas)</label>
+                <input type="text" class="form-control" id="acolhimento" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="form-group">
+                <label for="ceia">Ceia (separado por vírgulas)</label>
+                <input type="text" class="form-control" id="ceia" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="form-group">
+                <label for="dirigentes">Dirigentes (separado por vírgulas)</label>
+                <input type="text" class="form-control" id="dirigentes" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="form-group">
                 <label for="pregador">Pregador</label>
                 <input type="text" class="form-control" id="pregador" oninput="this.value = this.value.toUpperCase()">
             </div>
@@ -139,52 +151,58 @@
     <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-firestore.js"></script>
 
-    <script>
-        var configuracaoFirebase = {
-            apiKey: "AIzaSyCEqseDS-_OSmdfGf-NNflAJnS_AT5i1-U",
-            authDomain: "dbiebi.firebaseapp.com",
-            databaseURL: "https://dbiebi-default-rtdb.firebaseio.com",
-            projectId: "dbiebi",
-            storageBucket: "dbiebi.appspot.com",
-            messagingSenderId: "1068164821081",
-            appId: "1:1068164821081:web:2d3e0030d5311d94f30148"
-        };
-        firebase.initializeApp(configuracaoFirebase);
-        var bancoDeDados = firebase.firestore();
+<script>
+    var configuracaoFirebase = {
+        apiKey: "AIzaSyCEqseDS-_OSmdfGf-NNflAJnS_AT5i1-U",
+        authDomain: "dbiebi.firebaseapp.com",
+        databaseURL: "https://dbiebi-default-rtdb.firebaseio.com",
+        projectId: "dbiebi",
+        storageBucket: "dbiebi.appspot.com",
+        messagingSenderId: "1068164821081",
+        appId: "1:1068164821081:web:2d3e0030d5311d94f30148"
+    };
+    firebase.initializeApp(configuracaoFirebase);
+    var bancoDeDados = firebase.firestore();
 
-        flatpickr("#data", {
+    flatpickr("#data", {
         dateFormat: "d/m/Y",
         locale: "pt",
         minDate: "today",
         maxDate: new Date().fp_incr(365)
     });
 
-        document.getElementById('eventForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            var evento = document.getElementById('evento').value;
-            var data = document.getElementById('data').value;
-            var hora = document.getElementById('hora').value;
-            var louvor = document.getElementById('louvor').value.split(',').map(item => item.trim());
-            var pregador = document.getElementById('pregador').value;
+    document.getElementById('eventForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        var evento = document.getElementById('evento').value;
+        var data = document.getElementById('data').value;
+        var hora = document.getElementById('hora').value;
+        var louvor = document.getElementById('louvor').value.split(',').map(item => item.trim());
+        var acolhimento = document.getElementById('acolhimento').value.split(',').map(item => item.trim());
+        var ceia = document.getElementById('ceia').value.split(',').map(item => item.trim());
+        var dirigentes = document.getElementById('dirigentes').value.split(',').map(item => item.trim());
+        var pregador = document.getElementById('pregador').value;
 
-            var [dia, mes, ano] = data.split('/');
-            var dataHora = new Date(ano, mes - 1, dia, ...hora.split(':'));
-
-            bancoDeDados.collection('agenda').add({
-                evento: evento,
-                Data: firebase.firestore.Timestamp.fromDate(dataHora),
-                LOUVOR: louvor,
-                pregador: pregador
-            })
-            .then(function() {
-                alert('Evento cadastrado com sucesso!');
-                document.getElementById('eventForm').reset();
-            })
-            .catch(function(error) {
-                console.error("Erro ao cadastrar evento: ", error);
-            });
+        bancoDeDados.collection('agenda').add({
+            evento: evento,
+            Data: data,
+            Hora: hora,
+            LOUVOR: louvor,
+            acolhimento: acolhimento,
+            ceia: ceia,
+            dirigentes: dirigentes,
+            pregador: pregador
+        })
+        .then(function() {
+            alert('Evento cadastrado com sucesso!');
+            document.getElementById('eventForm').reset();
+        })
+        .catch(function(error) {
+            console.error("Erro ao cadastrar evento: ", error);
         });
-    </script>
+    });
+</script>
+
 </body>
+
 </html>

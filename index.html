@@ -243,91 +243,92 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-    <script>
-        // Configuração do Firebase
-        var configuracaoFirebase = {
-            apiKey: "AIzaSyCEqseDS-_OSmdfGf-NNflAJnS_AT5i1-U",
-            authDomain: "dbiebi.firebaseapp.com",
-            databaseURL: "https://dbiebi-default-rtdb.firebaseio.com",
-            projectId: "dbiebi",
-            storageBucket: "dbiebi.appspot.com",
-            messagingSenderId: "1068164821081",
-            appId: "1:1068164821081:web:2d3e0030d5311d94f30148"
-        };
-        firebase.initializeApp(configuracaoFirebase);
-        var bancoDeDados = firebase.firestore();
+<script>
+    // Configuração do Firebase
+    var configuracaoFirebase = {
+        apiKey: "AIzaSyCEqseDS-_OSmdfGf-NNflAJnS_AT5i1-U",
+        authDomain: "dbiebi.firebaseapp.com",
+        databaseURL: "https://dbiebi-default-rtdb.firebaseio.com",
+        projectId: "dbiebi",
+        storageBucket: "dbiebi.appspot.com",
+        messagingSenderId: "1068164821081",
+        appId: "1:1068164821081:web:2d3e0030d5311d94f30148"
+    };
+    firebase.initializeApp(configuracaoFirebase);
+    var bancoDeDados = firebase.firestore();
 
-        // Função para formatar a data
-        function formatDate(date) {
-            const options = { day: '2-digit', month: 'long' };
-            return date.toLocaleDateString('pt-BR', options).split(' de ');
-        }
+    // Função para formatar a data
+    function formatDate(date) {
+        const options = { day: '2-digit', month: 'long' };
+        return date.toLocaleDateString('pt-BR', options).split(' de ');
+    }
 
-        // Função para formatar a hora
-        function formatTime(date) {
-            const options = { hour: '2-digit', minute: '2-digit' };
-            return date.toLocaleTimeString('pt-BR', options);
-        }
+    // Função para formatar a hora
+    function formatTime(date) {
+        const options = { hour: '2-digit', minute: '2-digit' };
+        return date.toLocaleTimeString('pt-BR', options);
+    }
 
-        function getColorForWeek(date) {
-            const weekNumber = getWeekNumber(date);
-            const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
-            return colors[weekNumber % colors.length];
-        }
+    function getColorForWeek(date) {
+        const weekNumber = getWeekNumber(date);
+        const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6'];
+        return colors[weekNumber % colors.length];
+    }
 
-        function getWeekNumber(date) {
-            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-            const dayNum = d.getUTCDay() || 7;
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
-        }
+    function getWeekNumber(date) {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    }
 
-        // Função para carregar e exibir os eventos
-        function loadEvents() {
-            const eventList = document.getElementById('eventList');
-            eventList.innerHTML = '';
+    // Função para carregar e exibir os eventos
+    function loadEvents() {
+        const eventList = document.getElementById('eventList');
+        eventList.innerHTML = '';
 
-            const hoje = new Date();
-            const hojeFormatado = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
+        const hoje = new Date();
+        const hojeFormatado = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
 
-            bancoDeDados.collection('agenda')
-                .where('Data', '>=', hojeFormatado)
-                .orderBy('Data', 'asc')
-                .get()
-                .then((querySnapshot) => {
-                    querySnapshot.forEach((doc) => {
-                        const eventData = doc.data();
-                        const [dia, mes, ano] = eventData.Data.split('/');
-                        const eventDate = new Date(ano, mes - 1, dia);
-                        const formattedDate = formatDate(eventDate);
+        bancoDeDados.collection('agenda')
+            .where('Data', '>=', hojeFormatado)
+            .orderBy('Data', 'asc')
+            .get()
+            .then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    const eventData = doc.data();
+                    const [dia, mes, ano] = eventData.Data.split('/');
+                    const eventDate = new Date(ano, mes - 1, dia);
+                    const formattedDate = formatDate(eventDate);
 
-                        eventData.acolhimento.sort((a, b) => a.localeCompare(b, 'pt-BR'));
-                        eventData.ceia.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                    eventData.acolhimento.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                    eventData.ceia.sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
-                        const eventCard = document.createElement('div');
-                        eventCard.className = 'event-card';
+                    const eventCard = document.createElement('div');
+                    eventCard.className = 'event-card';
 
-                        const eventColor = getColorForWeek(eventDate);
-                        eventCard.style.borderLeft = `5px solid ${eventColor}`;
-                        eventCard.style.borderTop = `5px solid ${eventColor}`;
+                    const eventColor = getColorForWeek(eventDate);
+                    eventCard.style.borderLeft = `5px solid ${eventColor}`;
+                    eventCard.style.borderTop = `5px solid ${eventColor}`;
 
-                        eventCard.innerHTML = `
-                            <div class="event-date" style="background-color: ${eventColor}">
-                                <span class="day">${formattedDate[0]}</span>
-                                <span class="month">${formattedDate[1].charAt(0).toUpperCase() + formattedDate[1].slice(1)}</span>
-                                <span class="weekday">${eventDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</span>
+                    eventCard.innerHTML = `
+                        <div class="event-date" style="background-color: ${eventColor}">
+                            <span class="day">${formattedDate[0]}</span>
+                            <span class="month">${formattedDate[1].charAt(0).toUpperCase() + formattedDate[1].slice(1)}</span>
+                            <span class="weekday">${eventDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</span>
+                        </div>
+                        <div class="event-info">
+                            <div class="event-title" style="color: ${eventColor}">${eventData.evento}</div>
+                            <div class="event-time"><strong>HORÁRIO: </strong>${eventData.Hora}</div>
+                            <div class="event-louvor">
+                                <strong>LOUVOR: </strong>
+                                <button class="btn-toggle-louvor" onclick="toggleLouvor(event, this)">+</button>
                             </div>
-                            <div class="event-info">
-                                <div class="event-title" style="color: ${eventColor}">${eventData.evento}</div>
-                                <div class="event-time"><strong>HORÁRIO: </strong>${eventData.Hora}</div>
-                                <div class="event-louvor">
-                                    <strong>LOUVOR: </strong>
-                                    <button class="btn-toggle-louvor" onclick="toggleLouvor(event, this)">+</button>
-                                </div>
-                                <ul class="louvor-list" style="display: none;">
-                                    ${eventData.LOUVOR.map(item => `<li>${item}</li>`).join('')}
-                                </ul>
+                            <ul class="louvor-list" style="display: none;">
+                                ${eventData.LOUVOR.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                            ${eventData.acolhimento && eventData.acolhimento.length > 0 ? `
                                 <div class="event-acolhimento">
                                     <strong>ACOLHIMENTO: </strong>
                                     <button class="btn-toggle-acolhimento" onclick="toggleAcolhimento(event, this)">+</button>
@@ -335,7 +336,8 @@
                                 <ul class="acolhimento-list" style="display: none;">
                                     ${eventData.acolhimento.map(item => `<li>${item}</li>`).join('')}
                                 </ul>
-                                ${eventData.ceia && eventData.ceia.length > 0 ? `
+                            ` : ''}
+                            ${eventData.ceia && eventData.ceia.length > 0 ? `
                                 <div class="event-ceia">
                                     <strong>CEIA: </strong>
                                     <button class="btn-toggle-ceia" onclick="toggleCeia(event, this)">+</button>
@@ -344,7 +346,7 @@
                                     ${eventData.ceia.map(item => `<li>${item}</li>`).join('')}
                                 </ul>
                             ` : ''}
-
+                                                        ${eventData.dirigentes && eventData.dirigentes.length > 0 ? `
                                 <div class="event-dirigentes">
                                     <strong>DIRIGENTES: </strong>
                                     <button class="btn-toggle-dirigentes" onclick="toggleDirigentes(event, this)">+</button>
@@ -352,125 +354,126 @@
                                 <ul class="dirigentes-list" style="display: none;">
                                     ${eventData.dirigentes.map(item => `<li>${item}</li>`).join('')}
                                 </ul>
-                                <div class="event-pregador"><strong>PREGADOR:</strong> ${eventData.pregador || 'Não informado'}</div>
-                            </div>
-                        `;
-                        eventCard.addEventListener('click', () => openEditModal(doc.id, eventData));
-                        eventList.appendChild(eventCard);
-                    });
-                })
-                .catch((error) => {
-                    console.error("Erro ao carregar eventos: ", error);
+                            ` : ''}
+                            <div class="event-pregador"><strong>PREGADOR:</strong> ${eventData.pregador || 'Não informado'}</div>
+                        </div>
+                    `;
+                    eventCard.addEventListener('click', () => openEditModal(doc.id, eventData));
+                    eventList.appendChild(eventCard);
                 });
-        }
-
-
-        function toggleLouvor(event, button) {
-            toggleList(event, button, 'louvor-list');
-        }
-
-        function toggleAcolhimento(event, button) {
-            toggleList(event, button, 'acolhimento-list');
-        }
-
-        function toggleCeia(event, button) {
-            toggleList(event, button, 'ceia-list');
-        }
-
-        function toggleDirigentes(event, button) {
-            toggleList(event, button, 'dirigentes-list');
-        }
-
-        function toggleList(event, button, listClass) {
-            event.stopPropagation();
-            const list = button.parentElement.nextElementSibling;
-            if (list.style.display === 'none') {
-                list.style.display = 'block';
-                button.textContent = '-';
-            } else {
-                list.style.display = 'none';
-                button.textContent = '+';
-            }
-        }
-
-        function openEditModal(eventId, eventData) {
-            document.getElementById('editEventId').value = eventId;
-            document.getElementById('editEvento').value = eventData.evento;
-            document.getElementById('editData').value = eventData.Data;
-            document.getElementById('editHora').value = eventData.Hora;
-            document.getElementById('editLouvor').value = eventData.LOUVOR.join(', ');
-            document.getElementById('editAcolhimento').value = eventData.acolhimento.join(', ');
-            document.getElementById('editCeia').value = eventData.ceia.join(', ');
-            document.getElementById('editDirigentes').value = eventData.dirigentes.join(', ');
-            document.getElementById('editPregador').value = eventData.pregador || '';
-
-            $('#editModal').modal('show');
-        }
-
-        function saveEditedEvent() {
-            const eventId = document.getElementById('editEventId').value;
-            const evento = document.getElementById('editEvento').value.trim().toUpperCase();
-            const data = document.getElementById('editData').value;
-            const hora = document.getElementById('editHora').value;
-            const louvor = document.getElementById('editLouvor').value.split(',').map(item => item.trim().toUpperCase());
-            const acolhimento = document.getElementById('editAcolhimento').value.split(',').map(item => item.trim().toUpperCase());
-            const ceia = document.getElementById('editCeia').value.split(',').map(item => item.trim().toUpperCase());
-            const dirigentes = document.getElementById('editDirigentes').value.split(',').map(item => item.trim().toUpperCase());
-            const pregador = document.getElementById('editPregador').value.trim().toUpperCase();
-
-            bancoDeDados.collection('agenda').doc(eventId).update({
-                evento: evento,
-                Data: data,
-                Hora: hora,
-                LOUVOR: louvor,
-                acolhimento: acolhimento,
-                ceia: ceia,
-                dirigentes: dirigentes,
-                pregador: pregador
             })
+            .catch((error) => {
+                console.error("Erro ao carregar eventos: ", error);
+            });
+    }
+
+    function toggleLouvor(event, button) {
+        toggleList(event, button, 'louvor-list');
+    }
+
+    function toggleAcolhimento(event, button) {
+        toggleList(event, button, 'acolhimento-list');
+    }
+
+    function toggleCeia(event, button) {
+        toggleList(event, button, 'ceia-list');
+    }
+
+    function toggleDirigentes(event, button) {
+        toggleList(event, button, 'dirigentes-list');
+    }
+
+    function toggleList(event, button, listClass) {
+        event.stopPropagation();
+        const list = button.parentElement.nextElementSibling;
+        if (list.style.display === 'none') {
+            list.style.display = 'block';
+            button.textContent = '-';
+        } else {
+            list.style.display = 'none';
+            button.textContent = '+';
+        }
+    }
+
+    function openEditModal(eventId, eventData) {
+        document.getElementById('editEventId').value = eventId;
+        document.getElementById('editEvento').value = eventData.evento;
+        document.getElementById('editData').value = eventData.Data;
+        document.getElementById('editHora').value = eventData.Hora;
+        document.getElementById('editLouvor').value = eventData.LOUVOR.join(', ');
+        document.getElementById('editAcolhimento').value = eventData.acolhimento.join(', ');
+        document.getElementById('editCeia').value = eventData.ceia.join(', ');
+        document.getElementById('editDirigentes').value = eventData.dirigentes.join(', ');
+        document.getElementById('editPregador').value = eventData.pregador || '';
+
+        $('#editModal').modal('show');
+    }
+
+    function saveEditedEvent() {
+        const eventId = document.getElementById('editEventId').value;
+        const evento = document.getElementById('editEvento').value.trim().toUpperCase();
+        const data = document.getElementById('editData').value;
+        const hora = document.getElementById('editHora').value;
+        const louvor = document.getElementById('editLouvor').value.split(',').map(item => item.trim().toUpperCase());
+        const acolhimento = document.getElementById('editAcolhimento').value.split(',').map(item => item.trim().toUpperCase());
+        const ceia = document.getElementById('editCeia').value.split(',').map(item => item.trim().toUpperCase());
+        const dirigentes = document.getElementById('editDirigentes').value.split(',').map(item => item.trim().toUpperCase());
+        const pregador = document.getElementById('editPregador').value.trim().toUpperCase();
+
+        bancoDeDados.collection('agenda').doc(eventId).update({
+            evento: evento,
+            Data: data,
+            Hora: hora,
+            LOUVOR: louvor,
+            acolhimento: acolhimento,
+            ceia: ceia,
+            dirigentes: dirigentes,
+            pregador: pregador
+        })
+        .then(() => {
+            alert('Evento atualizado com sucesso!');
+            $('#editModal').modal('hide');
+            loadEvents();
+        })
+        .catch((error) => {
+            console.error("Erro ao atualizar evento: ", error);
+            alert('Ocorreu um erro ao atualizar o evento. Por favor, tente novamente.');
+        });
+    }
+
+    function deleteEvent() {
+        const eventId = document.getElementById('editEventId').value;
+        if (confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.')) {
+            bancoDeDados.collection('agenda').doc(eventId).delete()
             .then(() => {
-                alert('Evento atualizado com sucesso!');
+                alert('Evento excluído com sucesso!');
                 $('#editModal').modal('hide');
                 loadEvents();
             })
             .catch((error) => {
-                console.error("Erro ao atualizar evento: ", error);
-                alert('Ocorreu um erro ao atualizar o evento. Por favor, tente novamente.');
+                console.error("Erro ao excluir evento: ", error);
+                alert('Ocorreu um erro ao excluir o evento. Por favor, tente novamente.');
             });
         }
+    }
 
-        function deleteEvent() {
-            const eventId = document.getElementById('editEventId').value;
-            if (confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.')) {
-                bancoDeDados.collection('agenda').doc(eventId).delete()
-                .then(() => {
-                    alert('Evento excluído com sucesso!');
-                    $('#editModal').modal('hide');
-                    loadEvents();
-                })
-                .catch((error) => {
-                    console.error("Erro ao excluir evento: ", error);
-                    alert('Ocorreu um erro ao excluir o evento. Por favor, tente novamente.');
-                });
-            }
-        }
+    // Inicializar Flatpickr para o campo de data de edição
+    flatpickr("#editData", {
+        dateFormat: "d/m/Y",
+        locale: "pt",
+        minDate: "today",
+        maxDate: new Date().fp_incr(365)
+    });
 
-        // Inicializar Flatpickr para o campo de data de edição
-        flatpickr("#editData", {
-            dateFormat: "d/m/Y",
-            locale: "pt",
-            minDate: "today",
-            maxDate: new Date().fp_incr(365)
-            
-        });
+    // Carregar eventos quando a página for carregada
+    window.onload = function() {
+        loadEvents();
+        // Inicializar tooltips do Bootstrap, se necessário
+        $('[data-toggle="tooltip"]').tooltip();
+    };
+</script>
 
-        // Carregar eventos quando a página for carregada
-        window.onload = function() {
-            loadEvents();
-            // Inicializar tooltips do Bootstrap, se necessário
-            $('[data-toggle="tooltip"]').tooltip();
-        };
-    </script>
+
 </body>
 </html>
 
