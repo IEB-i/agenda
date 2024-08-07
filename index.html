@@ -165,7 +165,6 @@
     </style>
 </head>
 <body>
-    <a href="cadagenda.html" class="btn-adicionar">+</a>
     <div class="header">
         <img src="image/LogoBranco.png" alt="Logo da Igreja Evangélica Batista Itapevi">
     </div>
@@ -358,7 +357,6 @@
                             <div class="event-pregador"><strong>PREGADOR:</strong> ${eventData.pregador || 'Não informado'}</div>
                         </div>
                     `;
-                    eventCard.addEventListener('click', () => openEditModal(doc.id, eventData));
                     eventList.appendChild(eventCard);
                 });
             })
